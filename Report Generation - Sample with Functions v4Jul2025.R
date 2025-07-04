@@ -429,7 +429,7 @@ for(i in 1:length(sqd_objects)){
   selected_mice_object <-  sqd_objects[[i]]
   
   imputed_statistic <- mice_impute_subset(
-    cluster_data = sexism_classification,
+    cluster_data = rawData,
     weights = "weightsDesignNonResponseRaked",
     miceObject = selected_mice_object,
     unweighted = F,
