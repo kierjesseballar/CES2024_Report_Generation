@@ -6,7 +6,8 @@ mice_impute_subset <- function(cluster_data = NULL,
                                subset_variable = "clusterID",
                                ## CHANGED ##: Default for order is now NULL to be more generic.
                                subset_variable_order = NULL,
-                               uniqueIDMap = "CES 2024 - All Schools, Weighted v11Feb2025 - Unique ID and Row ID only.xlsx"){
+                               uniqueIDMap = NULL
+                               ){
   library(mice)
   library(mitools)
   
@@ -17,21 +18,21 @@ mice_impute_subset <- function(cluster_data = NULL,
   
   if(!is.null(cluster_data)){
     ##### Load Unique ID and Row ID Mapping 
-    uniqueID_rowID_map <- read_xlsx(uniqueIDMap)
+    uniqueID_rowID_map <- uniqueIDMap
     
     ##### Get subset variable and unique ID
     ## CHANGED ##: Selects the column specified in `subset_variable` instead of hardcoding `clusterID`.
-    uniqueID_subsetID_map <- cluster_data %>% 
-      select(uniqueID, all_of(subset_variable)) 
+    uniqueID_subsetID_map <- cluster_data %>%
+      select(uniqueID, all_of(subset_variable))
     
     ##### Convert the MICE Object to long data
     miceDataLong <- mice::complete(miceObject[[1]][[1]],
                                    action = "long",
                                    include = TRUE) %>% 
-      mutate(rowid = if_else(row_number() %% 7906 == 0, 7906,
-                             row_number() %% 7906)) %>% 
-      left_join(uniqueID_rowID_map) %>%  
-      relocate(rowid, uniqueID) %>% 
+      mutate(rowid = if_else(row_number() %% nrow(miceData[["data"]]) == 0,  nrow(miceData[["data"]]),
+                             row_number() %%  nrow(miceData[["data"]]))) %>% 
+      left_join(uniqueID_rowID_map) %>%
+      relocate(rowid, uniqueID) %>%
       left_join(uniqueID_subsetID_map) %>% ## CHANGED ##: Joins the dynamically selected subset variable.
       ## CHANGED ##: Relocates the column specified in `subset_variable`.
       relocate(rowid, uniqueID, all_of(subset_variable)) %>% 
