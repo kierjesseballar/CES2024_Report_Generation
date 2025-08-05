@@ -36,8 +36,8 @@ courses_mapped <- read_xlsx("CES 2024 - Courses for Classification, Thea Classif
   mutate(degree = str_trim(degree))
 
 ##### |> Read Data ------
-rawData <- read_xlsx("CES 2024 - All Schools, Weighted v7Jul2025.xlsx",
-                     guess_max = 7000,
+rawData <- read_xlsx("CES 2024 - All Schools, Weighted v4Aug2025.xlsx",
+                     guess_max = 10000,
                      sheet = 1) %>% 
   mutate(uniqueID = str_c(schoolNameSample, studentID, degree, 
                           sex, svydate,
@@ -2832,7 +2832,7 @@ for(i in 1:length(clusters)){
   survey_design <- svydesign(ids = ~1,
                              strata = ~strata,
                              weights = ~weightsDesignNonResponseRaked,
-                             data = rawData) %>% 
+                             data = clusterData_Full_Assigned) %>% 
     subset(get(subset_variable) == clusters[[i]])
   
   survey_design_used <- subset(survey_design, 
@@ -3016,7 +3016,7 @@ for(i in 1:length(clusters)){
   survey_design <- svydesign(ids = ~1,
                              strata = ~strata,
                              weights = ~weightsDesignNonResponseRaked,
-                             data = rawData) %>% 
+                             data = clusterData_Full_Assigned) %>% 
     subset(get(subset_variable) == clusters[[i]])
   
   survey_design_used <- subset(survey_design, 
@@ -3198,7 +3198,7 @@ for(i in 1:length(clusters)){
   survey_design <- svydesign(ids = ~1,
                              strata = ~strata,
                              weights = ~weightsDesignNonResponseRaked,
-                             data = rawData) %>% 
+                             data = clusterData_Full_Assigned) %>% 
     subset(get(subset_variable) == clusters[[i]])
   
   survey_design_used <- subset(survey_design, 
@@ -3282,3 +3282,1466 @@ graph <- graph_sqd_section(
 )
 
 graph
+
+##### || b. Impact on Well-being and Future Plans: -----
+##### |> i.	Satisfaction with life -----
+##### |>> Select Variables
+selectedVariables <- "satpres"
+
+selected_Title <- c("Satisfaction with Life Currently")
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Civic Welfare and Training Service (CWTS)" ~ "CWTS",
+      . == "Literacy Training Service (LTS)" ~ "LTS",
+      . == "Reserve Officers' Training Corps (ROTC)" ~ "ROTC",
+      . == "Civic Welfare Training Service (CWTS)" ~ "CWTS",
+      . == "Reserve Officers Training Corps (ROTC)" ~ "ROTC", 
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used) == nrow(clusterData_Full_Assigned)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level, 
+                             c("Very Satisfied", 
+                               "Satisfied",
+                               "Neither Satisfied nor Dissatisfied",
+                               "Dissatisfied", 
+                               "Very Dissatisfied"))) %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- brewer.pal(name = "RdYlGn", n = 5)
+
+graph <- graph_single(
+  selectedVariable_name = selectedVariables,
+  dataWeighted_Used = data_used,
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 3,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = rev(c("Civic Advocates",
+                                "Reliable Supporters",
+                                "Drawable Crowd",
+                                "Disengaged Youth")))
+graph
+
+
+
+
+
+
+##### |> ii.	Improvement in future forecast -----
+##### |>> Select Variables
+selectedVariables <- "satfuture"
+
+selected_Title <- c("Optimism with the Future")
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Civic Welfare and Training Service (CWTS)" ~ "CWTS",
+      . == "Literacy Training Service (LTS)" ~ "LTS",
+      . == "Reserve Officers' Training Corps (ROTC)" ~ "ROTC",
+      . == "Civic Welfare Training Service (CWTS)" ~ "CWTS",
+      . == "Reserve Officers Training Corps (ROTC)" ~ "ROTC", 
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used) == nrow(clusterData_Full_Assigned)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level, 
+                             c("My life will improve significantly", 
+                               "My life will slightly improve",
+                               "Nothing will change, everything will be the same",
+                               "My life will become slightly worse", 
+                               "My life will worsen significantly"))) %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- brewer.pal(name = "RdYlGn", n = 5)
+
+graph <- graph_single(
+  selectedVariable_name = selectedVariables,
+  dataWeighted_Used = data_used,
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 3,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = rev(c("Civic Advocates",
+                                "Reliable Supporters",
+                                "Drawable Crowd",
+                                "Disengaged Youth")))
+graph
+
+#### |> iii.	Feelings -----
+##### |>> Select Variables
+selectedVariables <- c("feels1", "feels2", "feels3", "feels4", "feels5", 
+                       "feels6", "feels7", "feels8", "feels9_family",
+                       "feels9_friends", "feels10", "feels11")
+
+selected_Title <- c("Self Rated Mental Health")
+
+temp <- dictionary %>% 
+  filter(VARNAME %in% selectedVariables) %>% 
+  select(VARNAME, VAR_LABEL)
+
+# write_xlsx(temp, "temp.xlsx")
+
+selectedVariable_Desc <- dictionary %>% 
+  filter(VARNAME %in% selectedVariables) %>% 
+  select(VARNAME, VAR_LABEL) %>% 
+  mutate(VAR_LABEL = str_remove_all(VAR_LABEL, "Feeling: ")) %>% 
+  mutate(VAR_LABEL = str_trim(VAR_LABEL)) %>% 
+  mutate(VAR_LABEL = case_when(
+    VARNAME == 'civicaction_follow' ~ 'Followed political figure on social media',
+    VARNAME == 'civicaction_likeshare' ~ 'Liked or shared soc-pol posts on social media',
+    VARNAME == 'civicaction_post' ~ 'Posted thoughts on soc-pol issues on social media',
+    VARNAME == 'civicaction_discussonline' ~ 'Discussed soc-pol issues on the internet',
+    VARNAME == 'civicaction_soughtnews' ~ 'Sought out news about political issues',
+    VARNAME == 'civicaction_discussoffline' ~ 'Discussed soc-pol issues in person',
+    T ~ VAR_LABEL
+  ))
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>%
+  # filter(YearLevel == "1st years") %>% 
+  select(
+    # IDs
+    uniqueID, clusterID, strata,
+    YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Once in the past yea" ~ "Once in the past year",
+      . == "I  have not done this, but I might do it if something important happens in the future." ~ "Have not done but might do if something important happens",
+      . == "I have not done this and I would not do it regardless of the situation" ~ "Have not done and will never do",
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+unique(data_used$YearLevel)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  select(-c(uniqueID, clusterID, strata,
+            YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level, 
+                             c("Very Often", 
+                               "Often",
+                               "Sometimes",
+                               "Rarely", 
+                               "Never"))) %>%
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- brewer.pal(name = "RdYlGn", n = 5)
+
+graph <- graph_section(
+  dataWeighted_Used = data_used,
+  selectedVariables_vec = selectedVariables,
+  selectedVariable_Desc_df = selectedVariable_Desc,
+  rank_by_value = c("Very Often", 
+                    "Often"),
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 1,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  facet_row_combined = 1,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = c("Civic Advocates",
+                            "Reliable Supporters",
+                            "Drawable Crowd",
+                            "Disengaged Youth")
+)
+
+graph
+
+
+
+
+
+
+#### |> iv.	Life outlook and Resilience -----
+##### |>> Select Variables
+selectedVariables <- c("outlook_life", "outlook_paths", "outlook_peers",
+                       "outlook_resourceful", "outlook_pasthelp", 
+                       "outlook_persistence")
+
+selected_Title <- c("Optimism and Resilience")
+
+temp <- dictionary %>% 
+  filter(VARNAME %in% selectedVariables) %>% 
+  select(VARNAME, VAR_LABEL)
+
+# write_xlsx(temp, "temp.xlsx")
+
+selectedVariable_Desc <- dictionary %>% 
+  filter(VARNAME %in% selectedVariables) %>% 
+  select(VARNAME, VAR_LABEL) %>% 
+  mutate(VAR_LABEL = str_remove_all(VAR_LABEL, "Outlook: ")) %>% 
+  mutate(VAR_LABEL = str_trim(VAR_LABEL)) %>% 
+  mutate(VAR_LABEL = case_when(
+    VARNAME == 'civicaction_follow' ~ 'Followed political figure on social media',
+    VARNAME == 'civicaction_likeshare' ~ 'Liked or shared soc-pol posts on social media',
+    VARNAME == 'civicaction_post' ~ 'Posted thoughts on soc-pol issues on social media',
+    VARNAME == 'civicaction_discussonline' ~ 'Discussed soc-pol issues on the internet',
+    VARNAME == 'civicaction_soughtnews' ~ 'Sought out news about political issues',
+    VARNAME == 'civicaction_discussoffline' ~ 'Discussed soc-pol issues in person',
+    T ~ VAR_LABEL
+  ))
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>%
+  # filter(YearLevel == "1st years") %>% 
+  select(
+    # IDs
+    uniqueID, clusterID, strata,
+    YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Once in the past yea" ~ "Once in the past year",
+      . == "I  have not done this, but I might do it if something important happens in the future." ~ "Have not done but might do if something important happens",
+      . == "I have not done this and I would not do it regardless of the situation" ~ "Have not done and will never do",
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  )) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~str_remove_all(., "^.*? - ")
+  ))
+
+unique(data_used$YearLevel)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  select(-c(uniqueID, clusterID, strata,
+            YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level, 
+                             c("Strongly Agree", 
+                               "Agree",
+                               "Neutral",
+                               "Disagree", 
+                               "Strongly Disagree"))) %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- brewer.pal(name = "RdYlGn", n = 5)
+
+graph <- graph_section(
+  dataWeighted_Used = data_used,
+  selectedVariables_vec = selectedVariables,
+  selectedVariable_Desc_df = selectedVariable_Desc,
+  rank_by_value = c("Strongly Agree", 
+                    "Agree"),
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 1,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  facet_row_combined = 1,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = c("Civic Advocates",
+                            "Reliable Supporters",
+                            "Drawable Crowd",
+                            "Disengaged Youth")
+)
+
+graph
+
+
+
+
+
+#### |> v.	Career paths -----
+##### |>> Select Variables
+selectedVariables <- c("path_advocacy", "path_govtemployee", 
+                       "path_govtelected", "path_uniformed")
+
+selected_Title <- c("Career Paths in the Government and NGOs")
+
+temp <- dictionary %>% 
+  filter(VARNAME %in% selectedVariables) %>% 
+  select(VARNAME, VAR_LABEL)
+
+# write_xlsx(temp, "temp.xlsx")
+
+selectedVariable_Desc <- dictionary %>% 
+  filter(VARNAME %in% selectedVariables) %>% 
+  select(VARNAME, VAR_LABEL) %>% 
+  mutate(VAR_LABEL = str_remove_all(VAR_LABEL, "Career path: ")) %>% 
+  mutate(VAR_LABEL = str_trim(VAR_LABEL)) %>% 
+  mutate(VAR_LABEL = case_when(
+    VARNAME == 'civicaction_follow' ~ 'Followed political figure on social media',
+    VARNAME == 'civicaction_likeshare' ~ 'Liked or shared soc-pol posts on social media',
+    VARNAME == 'civicaction_post' ~ 'Posted thoughts on soc-pol issues on social media',
+    VARNAME == 'civicaction_discussonline' ~ 'Discussed soc-pol issues on the internet',
+    VARNAME == 'civicaction_soughtnews' ~ 'Sought out news about political issues',
+    VARNAME == 'civicaction_discussoffline' ~ 'Discussed soc-pol issues in person',
+    T ~ VAR_LABEL
+  ))
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>%
+  # filter(YearLevel == "1st years") %>% 
+  select(
+    # IDs
+    uniqueID, clusterID, strata,
+    YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Once in the past yea" ~ "Once in the past year",
+      . == "I  have not done this, but I might do it if something important happens in the future." ~ "Have not done but might do if something important happens",
+      . == "I have not done this and I would not do it regardless of the situation" ~ "Have not done and will never do",
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  )) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~str_remove_all(., "^.*? - ")
+  ))
+
+unique(data_used$YearLevel)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  select(-c(uniqueID, clusterID, strata,
+            YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level,
+                             "Not at all interested", "Slightly interested", 
+                             "Moderately interested", "Quite Interested", 
+                             "Very interested")) 
+
+##### |>>> Run graph function
+palette <- brewer.pal(name = "RdYlGn", n = 5)
+
+graph <- graph_section(
+  dataWeighted_Used = data_used,
+  selectedVariables_vec = selectedVariables,
+  selectedVariable_Desc_df = selectedVariable_Desc,
+  rank_by_value = c("Quite Interested", 
+                    "Very interested"),
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 1,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  facet_row_combined = 1,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = c("Civic Advocates",
+                            "Reliable Supporters",
+                            "Drawable Crowd",
+                            "Disengaged Youth")
+)
+
+graph
+
+##### || c. Impact on Democratic Habits: -----
+#### |> i.	Interest in leadership positions -----
+##### |>> Select Variables
+selectedVariables <- c("ileaderorg", "ileadergov")
+
+selected_Title <- c("Interest in Leading Student Orgs and in the (Future) Government")
+
+temp <- dictionary %>% 
+  filter(VARNAME %in% selectedVariables) %>% 
+  select(VARNAME, VAR_LABEL)
+
+# write_xlsx(temp, "temp.xlsx")
+
+selectedVariable_Desc <- dictionary %>% 
+  filter(VARNAME %in% selectedVariables) %>% 
+  select(VARNAME, VAR_LABEL) %>% 
+  mutate(VAR_LABEL = str_remove_all(VAR_LABEL, "Interested in leadership positions: ")) %>% 
+  mutate(VAR_LABEL = str_trim(VAR_LABEL)) %>% 
+  mutate(VAR_LABEL = case_when(
+    VARNAME == 'civicaction_follow' ~ 'Followed political figure on social media',
+    VARNAME == 'civicaction_likeshare' ~ 'Liked or shared soc-pol posts on social media',
+    VARNAME == 'civicaction_post' ~ 'Posted thoughts on soc-pol issues on social media',
+    VARNAME == 'civicaction_discussonline' ~ 'Discussed soc-pol issues on the internet',
+    VARNAME == 'civicaction_soughtnews' ~ 'Sought out news about political issues',
+    VARNAME == 'civicaction_discussoffline' ~ 'Discussed soc-pol issues in person',
+    T ~ VAR_LABEL
+  ))
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>%
+  # filter(YearLevel == "1st years") %>% 
+  select(
+    # IDs
+    uniqueID, clusterID, strata,
+    YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Once in the past yea" ~ "Once in the past year",
+      . == "I  have not done this, but I might do it if something important happens in the future." ~ "Have not done but might do if something important happens",
+      . == "I have not done this and I would not do it regardless of the situation" ~ "Have not done and will never do",
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  )) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    ~str_remove_all(., "^.*? - ")
+  ))
+
+unique(data_used$YearLevel)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  select(-c(uniqueID, clusterID, strata,
+            YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level,
+                             "Yes", "No")) %>% 
+  mutate(level = fct_rev(level))
+
+##### |>>> Run graph function
+palette <- c("#D73027", 
+             "#1A9850")
+
+graph <- graph_section(
+  dataWeighted_Used = data_used,
+  selectedVariables_vec = selectedVariables,
+  selectedVariable_Desc_df = selectedVariable_Desc,
+  rank_by_value = c("Yes"),
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 1,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  facet_row_combined = 1,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = c("Civic Advocates",
+                            "Reliable Supporters",
+                            "Drawable Crowd",
+                            "Disengaged Youth")
+)
+
+graph
+
+##### |> ii.	More young people in office? -----
+##### |>> Select Variables
+selectedVariables <- "officeyouth"
+
+selected_Title <- c("Should more young people run for office?")
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Civic Welfare and Training Service (CWTS)" ~ "CWTS",
+      . == "Literacy Training Service (LTS)" ~ "LTS",
+      . == "Reserve Officers' Training Corps (ROTC)" ~ "ROTC",
+      . == "Civic Welfare Training Service (CWTS)" ~ "CWTS",
+      . == "Reserve Officers Training Corps (ROTC)" ~ "ROTC", 
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level, 
+                             c("Yes", "No"))) %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- c("#D73027", 
+            "#1A9850")
+
+graph <- graph_single(
+  selectedVariable_name = selectedVariables,
+  dataWeighted_Used = data_used,
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 1,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = rev(c("Civic Advocates",
+                                "Reliable Supporters",
+                                "Drawable Crowd",
+                                "Disengaged Youth")))
+graph
+
+
+
+
+
+##### |> iii.	Perceptions of an ideal leader -----
+##### |>> Select Variables
+selectedVariables <- "idealleader"
+
+selected_Title <- c("What is the ideal leader that this country needs?")
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "A leader that is inclusive and open. A participative leading style that involves a team of people to collaborate and make critical decisions together and as a team." ~ "Inclusive, open, and participative; makes critical decisions with a team",
+      . == "A leader that is a visionary. Encourages resourcefulness and innovative thinking in tackling challenging goals while sticking to deadlines." ~ "Visionary, resourceful, and innovative; tackles challenging goals within deadlines",
+      . == "A leader that is aggressive. Needs to be in-charge and leadership to be based on control. Expects promptness and perfection from the people him/her." ~ "Aggressive; leadership based on control; expects promptness and perfection",
+      . == "A leader that is hands-off and allows its group members to make decisions. Trusts that people make good decisions while periodically monitoring their performance and offers ongoing feedback." ~ "Hands-off; trusts people to make good decisions; offers feedback and monitoring",
+      . == "A leader that invests on building its people’s long-term strengths.  Helps people set goals to work towards and give them regular feedback they need to reach success." ~ "Invests in building people's strengths",
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- brewer.pal(name = "Set1", n = 5)
+
+graph <- graph_single(
+  selectedVariable_name = selectedVariables,
+  dataWeighted_Used = data_used,
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 5,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = rev(c("Civic Advocates",
+                                "Reliable Supporters",
+                                "Drawable Crowd",
+                                "Disengaged Youth")))
+graph
+
+
+
+
+
+##### |> iv.	Voting patterns - vote_past -----
+##### |>> Select Variables
+selectedVariables <- "vote_past"
+
+selected_Title <- c("Have you voted in the following?")
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Civic Welfare and Training Service (CWTS)" ~ "CWTS",
+      . == "Literacy Training Service (LTS)" ~ "LTS",
+      . == "Reserve Officers' Training Corps (ROTC)" ~ "ROTC",
+      . == "Civic Welfare Training Service (CWTS)" ~ "CWTS",
+      . == "Reserve Officers Training Corps (ROTC)" ~ "ROTC", 
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level, 
+                             c("I have participated in both local and national elections",
+                               "National elections only",
+                               "Local elections only",
+                               "I have not voted yet in any government elections"))) %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- brewer.pal(name = "RdYlGn", n = 4)
+palette <- c("#D7191C", "#A6D96A", "#6ED96A", "#1A9641")
+
+graph <- graph_single(
+  selectedVariable_name = selectedVariables,
+  dataWeighted_Used = data_used,
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 2,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = rev(c("Civic Advocates",
+                                "Reliable Supporters",
+                                "Drawable Crowd",
+                                "Disengaged Youth")))
+graph
+
+##### |> v.	Voting patterns - vote_why -----
+##### |>> Select Variables
+selectedVariables <- "vote_why"
+
+selected_Title <- c("If you have voted, what are your reasons for voting?")
+
+##### |>>> Select Data
+data_used_temp <- clusterData_Full_Assigned %>%
+  select(uniqueID, selectedVariables) %>% 
+  separate_rows(selectedVariables, sep = ", ") %>% 
+  # drop_na is useful here if you don't want a column named `<NA>`
+  tidyr::drop_na(selectedVariables) 
+
+##### clean options
+unique(data_used_temp$vote_why)
+
+data_used_temp <- clusterData_Full_Assigned %>%
+  select(uniqueID, clusterID, strata,
+         FormNumber, weightsDesignNonResponseRaked,
+         selectedVariables) %>% 
+  separate_rows({{selectedVariables}}, sep = ", ") %>% 
+  filter(!is.na(selectedVariables)) %>% 
+  mutate(across(all_of(selectedVariables),
+                ~case_when(
+                  . == "It is my civic duty to vote." ~ "Civic duty",
+                  . == "I believe it is important to vote." ~ "Important",
+                  . == "It is a way of expressing my opinions/views." ~ "Express opinions/views",
+                  . == "It is my right to vote." ~ "Right to vote",
+                  . == "I do it out of habit." ~ "Habit",
+                  . == "I just go with my family and friends who are also voting." ~ "Go with family",
+                  . == "It’s a way of creating change in the country." ~ "Create change",
+                  is.na(.) ~ "Have not voted before",
+                  T ~ "Others"
+                ))) %>% 
+  distinct() %>% 
+  mutate(value = "Selected") %>% 
+  pivot_wider(
+    names_from = !!(selectedVariables),
+    values_from = value,
+    values_fill = "Not Selected"
+  ) 
+
+##### Get the column names
+vars_id <- c("uniqueID", "clusterID", "strata",
+             "FormNumber", "weightsDesignNonResponseRaked")
+
+vars_expanded <- discard(colnames(data_used_temp),
+                         ~. %in% vars_id)
+
+data_used <- data_used_temp %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(vars_expanded)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Civic Welfare and Training Service (CWTS)" ~ "CWTS",
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used)
+
+##### |>> Use current column names as the axis text in the graph 
+selectedVariable_Desc <- tibble(VARNAME = vars_expanded) %>% 
+  mutate(VAR_LABEL = VARNAME)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level, 
+                             c("Selected", 
+                               "Not Selected"))) %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- c("#F9FEFB", 
+             "#1A9850")
+
+graph <- graph_section(
+  dataWeighted_Used = data_used,
+  selectedVariables_vec = vars_expanded,
+  selectedVariable_Desc_df = selectedVariable_Desc,
+  rank_by_value = c("Selected"),
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 1,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  facet_row_combined = 1,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = c("Civic Advocates",
+                            "Reliable Supporters",
+                            "Drawable Crowd",
+                            "Disengaged Youth")
+)
+
+graph
+
+##### |> vi.	Voting patterns - vote_how -----
+##### |>> Select Variables
+selectedVariables <- "vote_how"
+
+selected_Title <- c("How did you decide who to vote for?")
+
+##### |>>> Select Data
+data_used_temp <- clusterData_Full_Assigned %>%
+  select(uniqueID, selectedVariables) %>% 
+  separate_rows(selectedVariables, sep = ", ") %>% 
+  # drop_na is useful here if you don't want a column named `<NA>`
+  tidyr::drop_na(selectedVariables) 
+
+##### clean options
+unique(data_used_temp[, selectedVariables])
+
+data_used_temp <- clusterData_Full_Assigned %>%
+  select(uniqueID, clusterID, strata,
+         FormNumber, weightsDesignNonResponseRaked,
+         selectedVariables) %>% 
+  separate_rows({{selectedVariables}}, sep = ", ") %>% 
+  filter(!is.na(selectedVariables)) %>% 
+  mutate(across(all_of(selectedVariables),
+                ~case_when(
+                  . == "I decide on my own." ~ "Decide on their own",
+                  . == "I follow my parents’ decisions on who to vote for." ~ "Follow parents",
+                  . == "I follow my friends’ decisions on who to vote for." ~ "Follow friends",
+                  . == "I follow my religious adviser’s decisions on who to vote for." ~ "Follow religious advisers",
+                  . == "I follow celebrities’ decisions on who to vote for." ~ "Follow celebrities",
+                  . == "I follow my teacher’s decisions on who to vote for." ~ "Follow teachers",
+                  . == "I follow my community leader’s decisions on who to vote for. " ~ "Follow community leaders",
+                  is.na(.) ~ "Have not voted before",
+                  T ~ "Others"
+                ))) %>% 
+  distinct() %>% 
+  mutate(value = "Selected") %>% 
+  pivot_wider(
+    names_from = !!(selectedVariables),
+    values_from = value,
+    values_fill = "Not Selected"
+  ) 
+
+##### Get the column names
+vars_id <- c("uniqueID", "clusterID", "strata",
+             "FormNumber", "weightsDesignNonResponseRaked")
+
+vars_expanded <- discard(colnames(data_used_temp),
+                         ~. %in% vars_id)
+
+data_used <- data_used_temp %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(vars_expanded)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Civic Welfare and Training Service (CWTS)" ~ "CWTS",
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used)
+
+##### |>> Use current column names as the axis text in the graph 
+selectedVariable_Desc <- tibble(VARNAME = vars_expanded) %>% 
+  mutate(VAR_LABEL = VARNAME)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level, 
+                             c("Selected", 
+                               "Not Selected"))) %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- c("#F9FEFB", 
+             "#1A9850")
+
+graph <- graph_section(
+  dataWeighted_Used = data_used,
+  selectedVariables_vec = vars_expanded,
+  selectedVariable_Desc_df = selectedVariable_Desc,
+  rank_by_value = c("Selected"),
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 1,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  facet_row_combined = 1,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = c("Civic Advocates",
+                            "Reliable Supporters",
+                            "Drawable Crowd",
+                            "Disengaged Youth")
+)
+
+graph
+
+##### |> vii.	Voting patterns - vote_infosrc -----
+##### |>> Select Variables
+selectedVariables <- "vote_infosrc"
+
+selected_Title <- c("Primary Source of Information on Electoral Candidates")
+
+##### |>>> Select Data
+data_used_temp <- clusterData_Full_Assigned %>%
+  select(uniqueID, selectedVariables) %>% 
+  separate_rows(selectedVariables, sep = ", ") %>% 
+  # drop_na is useful here if you don't want a column named `<NA>`
+  tidyr::drop_na(selectedVariables) 
+
+##### clean options
+unique(data_used_temp[, selectedVariables])
+
+data_used_temp <- clusterData_Full_Assigned %>%
+  select(uniqueID, clusterID, strata,
+         FormNumber, weightsDesignNonResponseRaked,
+         selectedVariables) %>% 
+  separate_rows({{selectedVariables}}, sep = ", ") %>% 
+  filter(!is.na(selectedVariables)) %>% 
+  mutate(across(all_of(selectedVariables),
+                ~case_when(
+                  . == "I do not look for information on the candidates." ~ "Do not look for info",
+                  T ~ .
+                ))) %>% 
+  distinct() %>% 
+  mutate(value = "Selected") %>% 
+  pivot_wider(
+    names_from = !!(selectedVariables),
+    values_from = value,
+    values_fill = "Not Selected"
+  ) 
+
+##### Get the column names
+vars_id <- c("uniqueID", "clusterID", "strata",
+             "FormNumber", "weightsDesignNonResponseRaked")
+
+vars_expanded <- discard(colnames(data_used_temp),
+                         ~. %in% vars_id)
+
+data_used <- data_used_temp %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(vars_expanded)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Civic Welfare and Training Service (CWTS)" ~ "CWTS",
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used)
+
+##### |>> Use current column names as the axis text in the graph 
+selectedVariable_Desc <- tibble(VARNAME = vars_expanded) %>% 
+  mutate(VAR_LABEL = VARNAME)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_relevel(level, 
+                             c("Selected", 
+                               "Not Selected"))) %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- c("#F9FEFB", 
+             "#1A9850")
+
+graph <- graph_section(
+  dataWeighted_Used = data_used,
+  selectedVariables_vec = vars_expanded,
+  selectedVariable_Desc_df = selectedVariable_Desc,
+  rank_by_value = c("Selected"),
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 1,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  facet_row_combined = 1,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = c("Civic Advocates",
+                            "Reliable Supporters",
+                            "Drawable Crowd",
+                            "Disengaged Youth")
+)
+
+graph
+
+##### |> viii.	Voting patterns - vote_comms -----
+##### |>> Select Variables
+selectedVariables <- "vote_comms"
+
+selected_Title <- c("Most effective communication in understanding candidates")
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "A leader that is inclusive and open. A participative leading style that involves a team of people to collaborate and make critical decisions together and as a team." ~ "Inclusive, open, and participative; makes critical decisions with a team",
+      . == "A leader that is a visionary. Encourages resourcefulness and innovative thinking in tackling challenging goals while sticking to deadlines." ~ "Visionary, resourceful, and innovative; tackles challenging goals within deadlines",
+      . == "A leader that is aggressive. Needs to be in-charge and leadership to be based on control. Expects promptness and perfection from the people him/her." ~ "Aggressive; leadership based on control; expects promptness and perfection",
+      . == "A leader that is hands-off and allows its group members to make decisions. Trusts that people make good decisions while periodically monitoring their performance and offers ongoing feedback." ~ "Hands-off; trusts people to make good decisions; offers feedback and monitoring",
+      . == "A leader that invests on building its people’s long-term strengths.  Helps people set goals to work towards and give them regular feedback they need to reach success." ~ "Invests in building people's strengths",
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- brewer.pal(name = "Set3", n = 10)
+
+graph <- graph_single(
+  selectedVariable_name = selectedVariables,
+  dataWeighted_Used = data_used,
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 5,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = rev(c("Civic Advocates",
+                                "Reliable Supporters",
+                                "Drawable Crowd",
+                                "Disengaged Youth")))
+graph
+
+
+
+
+
+
+
+
+
+
+
+##### |> ix.	Voter registration -----
+##### |>> Select Variables
+selectedVariables <- "voter"
+
+selected_Title <- c("Are you currently registered to vote?")
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "No, I am of voting-age and I plan to register before the 2025 Elections." ~ "No but will plan to register before the elections",      
+      . == "No, I am of voting-age but I will not register for the 2025 Elections." ~ "No and will NOT plan to register before the elections",      
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level)) %>% 
+  mutate(level = fct_rev(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- brewer.pal(name = "Set1", n = 3)
+
+graph <- graph_single(
+  selectedVariable_name = selectedVariables,
+  dataWeighted_Used = data_used,
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 2,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = rev(c("Civic Advocates",
+                                "Reliable Supporters",
+                                "Drawable Crowd",
+                                "Disengaged Youth")))
+
+graph
+
+##### |> x.	Plan to vote in 2025 -----
+##### |>> Select Variables
+selectedVariables <- "vote2025"
+
+selected_Title <- c("Do you plan to vote in the upcoming 2025 Philippine Elections?")
+
+##### |>>> Select Data
+data_used <- clusterData_Full_Assigned %>% 
+  # filter(YearLevel != "1st years") %>% 
+  select(
+    # IDs
+    # uniqueID, clusterID, strata,
+    # YearLevel, FormNumber, weightsDesignNonResponseRaked,
+    uniqueID, clusterID, strata,
+    FormNumber, weightsDesignNonResponseRaked,
+    # Selected Variables 
+    all_of(selectedVariables)) %>% 
+  mutate(across(
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~case_when(
+      . == "Yes, I am currently registered to vote." ~ "Yes",      
+      . == "No, I will not vote but I am eligible to vote by the 2025 Elections." ~ "No (Eligible)",   
+      . == "No, since I am not eligible to vote in the 2025 Elections." ~ "No (Ineligible)",   
+      T ~ .
+    )
+  )) %>%
+  mutate(across(
+    # .cols = -c(uniqueID, clusterID, strata,
+    #            YearLevel, FormNumber, weightsDesignNonResponseRaked),
+    .cols = -c(uniqueID, clusterID, strata,
+               FormNumber, weightsDesignNonResponseRaked),
+    ~as.factor(.)
+  ))
+
+nrow(data_used)
+
+##### |>>> Specify value labels 
+value_levels <- data_used %>% 
+  # select(-c(uniqueID, clusterID, strata,
+  #           YearLevel, FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(-c(uniqueID, clusterID, strata,
+            FormNumber, weightsDesignNonResponseRaked)) %>% 
+  select(1) %>% 
+  rename(level = 1) %>% 
+  distinct(level) %>% 
+  mutate(level = as.factor(level)) %>% 
+  mutate(level = fct_rev(level))
+
+value_levels
+
+value_levels_used <-  value_levels %>% 
+  mutate(level = fct_rev(level)) 
+
+##### |>>> Run graph function
+palette <- brewer.pal(name = "Set1", n = 3)
+
+graph <- graph_single(
+  selectedVariable_name = selectedVariables,
+  dataWeighted_Used = data_used,
+  value_levels = levels(value_levels_used$level),
+  guide_rows = 1,
+  palette = palette,
+  selected_Title = selected_Title,
+  geom_text = T,
+  unweighted = F,
+  weights = "weightsDesignNonResponseRaked",
+  bootstrap = F, # bootstrap
+  subset_variable = "clusterID",
+  subset_variable_order = rev(c("Civic Advocates",
+                                "Reliable Supporters",
+                                "Drawable Crowd",
+                                "Disengaged Youth")))
+graph
+
+
+
+
+
+
+
+
+
+
+
