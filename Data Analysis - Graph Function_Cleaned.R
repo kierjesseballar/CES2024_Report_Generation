@@ -342,17 +342,34 @@ graph_sqd_section <- function(imputed_statistics,
            variable = recode(variable, !!!value_mapping),
            value = fct_relevel(value, value_levels))
   
-  rank_basis <- subset_variable_order[[1]]
+  statistic_All_Processed <- statistic_All %>%
+    mutate(Freq = round(Freq, 1),
+           variable = recode(variable, !!!value_mapping),
+           value = fct_relevel(value, value_levels))
   
-  statistic_All_Rank <- statistic_All %>%
-    filter(subset == rank_basis, value == rank_by_value) %>%
-    arrange(Freq) %>%
-    pull(variable) %>%
-    as.vector()
-  
-  statistic_All_Used <- statistic_All %>%
-    mutate(variable = fct_relevel(as.factor(variable), statistic_All_Rank),
-           subset = fct_relevel(as.factor(subset), subset_variable_order))
+  ## CHANGED ##: Ranking and re-leveling only happens if there are subsets to rank
+  if (!is.null(subset_variable)) {
+    rank_basis <- subset_variable_order[[1]]
+    
+    if (length(rank_by_value) == 1) {
+      statistic_All_Rank <- statistic_All_Processed %>%
+        filter(subset == rank_basis, value == rank_by_value) %>%
+        arrange(Freq) %>% pull(variable) %>% as.vector()
+    } else {
+      statistic_All_Rank <- statistic_All_Processed %>%
+        filter(subset == rank_basis, value %in% as.vector(rank_by_value)) %>%
+        group_by(subset, variable) %>%
+        summarise(Freq = sum(Freq), .groups = 'drop') %>%
+        arrange(Freq) %>% pull(variable) %>% as.vector()
+    }
+    
+    statistic_All_Used <- statistic_All_Processed %>%
+      mutate(variable = fct_relevel(as.factor(variable), statistic_All_Rank),
+             subset = fct_relevel(as.factor(subset), subset_variable_order))
+  } else {
+    # For the overall graph, no ranking is needed, but we still need the final variable name
+    statistic_All_Used <- statistic_All_Processed
+  }
   
   graph_plot <- ggplot(statistic_All_Used) +
     geom_bar(aes(x = variable, y = Freq, fill = value),
