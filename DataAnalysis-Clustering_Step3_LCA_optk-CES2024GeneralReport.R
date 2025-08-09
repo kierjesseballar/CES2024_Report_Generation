@@ -5,7 +5,7 @@ library(stringr)
 
 ##### Read Data ------
 rawData <- read_xlsx("CES 2024 - All Schools, Weighted v7Jul2025.xlsx",
-                     guess_max = 7000,
+                     guess_max = 10000,
                      sheet = 1) %>% 
   mutate(uniqueID = str_c(schoolNameSample, studentID, degree, 
                           sex, svydate,
@@ -103,7 +103,7 @@ finalLCAModel <- poLCA(formula = modelForm,
 )
 
 file_name <- str_c("finalLCAModelNClass_4_rep_", nrep, "_v18Jul2025_CES2024.rds")
-saveRDS(finalLCAModel, "finalLCAModelNClass_4_rep_nrep_v18Jul2025_CES2024.rds")
+saveRDS(finalLCAModel, file_name)
 
 endTime <- Sys.time()
 
